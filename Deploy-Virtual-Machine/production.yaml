@@ -1,0 +1,36 @@
+trigger:
+  branches:
+    include:
+    - main
+
+variables:
+  USER: ubuntu
+  BRANCH_NAME: main
+  DOCKER_REPO: < Docker Repository >
+  DOCKER_IMAGE: < Docker Image >
+  PORT: < PORT APP >
+  GIT_REPOSITORY: < NAME GIT REPOSITORY >
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: self
+  clean: true
+
+- script: |
+    git checkout $(BRANCH_NAME)
+    git pull
+  displayName: "Change Branch and Get Last Changes" 
+
+- script: |
+    docker build -t $(DOCKER_REPOSITORY)/$(NAME_REPO):PROD-$(COMMIT_ID) .
+    docker push $(DOCKER_REPOSITORY)/$(NAME_REPO):PROD-$(COMMIT_ID)
+    docker rmi $(DOCKER_REPOSITORY)/$(NAME_REPO):PROD-$(COMMIT_ID)
+    TAG=echo "$(git log -1 --pretty=format:"%h")""
+    rm -fd ../$(GIT_REPOSITORY)
+  displayName: "Build and Push Docker" 
+
+- script: |
+    sshpass -p $(secretPASS_PROD) ssh $(USER)@$(secretIP_PUB_PROD) './deploy.sh $(DOCKER_REPO) $(DOCKER_IMAGE) $TAG $(PORT) '
+  displayName: "Deploy Virtual Machine Environment Production"
