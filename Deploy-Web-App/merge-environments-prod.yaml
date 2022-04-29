@@ -1,0 +1,24 @@
+trigger:
+  branches:
+    include:
+    - hotfix/*
+    - releases/*
+
+variables:
+  BRANCH_NAME: $[replace(variables['Build.SourceBranchName'], 'refs/heads/', '')]
+  
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: self
+  clean: true
+
+- script: |
+    git checkout '$(BRANCH_NAME)'
+    git pull
+    git merge main
+    git add .
+    git commit -m 'Merge branch $(BRANCH_NAME)'
+    git push
+  displayName: 'Reintegration Environments'

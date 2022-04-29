@@ -1,0 +1,40 @@
+trigger:
+  branches:
+    include:
+    - develop
+
+variables:
+  AZURE_SUBSCRIPTION: sb01
+  APP_NAME: container-app-prod
+  DOCKER_REGISTRY: breno600
+  DOCKER_REGISTRY_CONNECTION: '4fa4efbc-59af-4c0b-8637-1d5bf7f268fc'
+  DOCKER_IMAGE: app-azure
+  TAG: 'dev-$(Build.BuildId)'
+  VM_IMAGE: ubuntu-latest
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(DOCKER_IMAGE)
+        dockerfile: .
+        containerRegistry: $(DOCKER_REGISTRY_CONNECTION)
+        tags: |
+          $(TAG)
+          latest
+
+    - task: AzureWebAppContainer@1
+          displayName: 'Azure Web App on Container Deploy'
+          inputs:
+            azureSubscription: $(AZURE_SUBSCRIPTION)
+            appName: $(APP_NAME)
+            containers: $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(TAG)
