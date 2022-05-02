@@ -1,0 +1,18 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: AzureMysqlDeployment@1
+  inputs:
+    azureSubscription: $(AZURE_SUBS)
+    ServerName: '$(MYSQL_DB).mysql.database.azure.com'
+    SqlUsername: '$(MYSQL_USER)@$(MYSQL_DB)'
+    SqlPassword: '$(MYSQL_PASS)'
+    TaskNameSelector: 'InlineSqlTask'
+    SqlInline: |
+      CREATE DATABASE EXAMPLE;
+
+    IpDetectionMethod: 'AutoDetect'

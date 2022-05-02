@@ -12,7 +12,6 @@ variables:
   TAG: 'prod-$(Build.BuildId)'
   VM_IMAGE: ubuntu-latest
 
-
 stages:
 - stage: Build
   displayName: Build and push stage
@@ -30,12 +29,20 @@ stages:
         dockerfile: .
         containerRegistry: $(DOCKER_REGISTRY_CONNECTION)
         tags: |
-          $(TAG)
+          prod-$(TAG)
           latest
 
+- stages: Deploy
+  displayName: Deploy to Production
+  jobs:
+  - job: Deploy
+    displayName: Deploy
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps:
     - task: AzureWebAppContainer@1
-          displayName: 'Azure Web App on Container Deploy'
-          inputs:
-            azureSubscription: $(AZURE_SUBSCRIPTION)
-            appName: $(APP_NAME)
-            containers: $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(TAG)
+      displayName: 'Azure Web App on Container Deploy'
+      inputs:
+        azureSubscription: $(AZURE_SUBSCRIPTION)
+        appName: $(APP_NAME)
+        containers: $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):prod-$(TAG)
